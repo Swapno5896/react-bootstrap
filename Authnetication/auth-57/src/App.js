@@ -1,6 +1,6 @@
 import './App.css';
 import React, { useState } from 'react';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail } from "firebase/auth";
 import app from './firebase,init';
 // react bootstrap
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -11,7 +11,7 @@ function App() {
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
   const [regestered, setRegestered] = useState(false);
-
+  const [isEmailVarified, SetIsEmailVarified] = useState(false)
   // set error to show
   const [err, setErr] = useState('')
 
@@ -63,7 +63,7 @@ function App() {
         .catch((error) => {
           const errorCode = error.code;
           const errorMessage = error.message;
-          console.log(errorMessage)
+          setErr(errorMessage);
         });
 
 
@@ -82,6 +82,9 @@ function App() {
           //  clean form
           setPass('');
           setEmail('');
+
+          // send verify email
+          sendEmailToVerify()
           // ...
         })
         .catch((error) => {
@@ -95,9 +98,35 @@ function App() {
 
   }
 
+  // send verification email
+  const sendEmailToVerify = () => {
+    sendEmailVerification(auth.currentUser)
+      .then(() => {
+        SetIsEmailVarified(true)
+        // Email verification sent!
+        // ...
+      });
+  }
+
+  // reset password
+  const handelPasswordResest = () => {
+    sendPasswordResetEmail(auth, email)
+      .then(() => {
+        // Password reset email sent!
+        // ..
+        console.log('reset email send');
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        setErr(errorMessage);
+        // ..
+      });
+  }
   return (
     <div className='w-50 mx-auto mt-5'>
       <h3 className='text-primary'>{regestered ? 'LogIn' : 'Regester'} Hear</h3>
+      <h3>{isEmailVarified ? 'User varified by elail' : ''}</h3>
       <Form noValidate validated={validated} onSubmit={handelSumbit}>
         <Form.Group className="mb-3" controlId="formBasicEmail">
           <Form.Label>Email address</Form.Label>
@@ -121,6 +150,10 @@ function App() {
           <Form.Check type="checkbox" label="Already Regestered ?" />
         </Form.Group>
         <p className='text-danger'>{err}</p>
+        <Button variant='link' onClick={handelPasswordResest}>
+          Forget Password ?
+        </Button>
+        <br />
         <Button variant="primary" type="submit">
           {regestered ? 'LogIn' : 'Regester'}
         </Button>
